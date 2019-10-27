@@ -1,13 +1,17 @@
 const app = require('express')()
 const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
+const cors = require('cors')
 const controller = require('./controller')
 
+const mongoUrl = process.env.MONGO
 mongoose.connect(
   'mongodb://165.22.103.247:30001/anakod',
+  //mongoUrl,
   { useNewUrlParser: true }
 )
 
+app.use(cors())
 // form url encoded
 app.use(
   bodyParser.urlencoded({

@@ -10,7 +10,7 @@ let T
 let stream
 
 const postTweet = (req, res) => {
-  // const { userId, twitter_id, message } = req.body
+  const { userId, twitter_id, message } = req.body
 }
 
 const getTicket = async (req, res) => {
@@ -41,7 +41,7 @@ const createTicket = async (req, res) => {
     if (!msg) {
       throw new Error('no Message')
     }
-    const incr = Incr.findOneAndUpdate(
+    const incr = await Incr.findOneAndUpdate(
       {},
       {
         $inc: {
@@ -53,7 +53,7 @@ const createTicket = async (req, res) => {
       }
     )
     const ticket = new Ticket({
-      _id: `${msg.incr}`,
+      _id: `${incr}`,
       description: `${msg.description}`,
       status: 'doing',
       message_id: msg._id,
@@ -64,6 +64,10 @@ const createTicket = async (req, res) => {
       updated_time: new Date().toISOString()
     })
     await ticket.save()
+    res.json({
+      error: false,
+      data: ticket.toObject()
+    })
   } catch (e) {
     res.status(404).json({
       error: true,
