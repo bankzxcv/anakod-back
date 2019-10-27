@@ -86,6 +86,8 @@ const createTicket = async (req, res) => {
         new: true
       }
     )
+    msg.ticket_id = `${incr.incr}`
+    await msg.save()
     const ticket = new Ticket({
       _id: `${incr.incr}`,
       description: `${msg.description}`,
