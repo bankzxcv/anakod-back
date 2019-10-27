@@ -8,6 +8,7 @@ const MessageSchema = new mongoose.Schema(
     },
     description: String,
     url: String,
+    profile_url: String,
     created_time: String,
     updated_time: String,
     ticket_id: String

@@ -1,6 +1,7 @@
 const Twit = require('twit')
 const _ = require('lodash')
 const Token = require('./models/token.model')
+const Ticket = require('./models/ticket.model')
 const Message = require('./models/message.model')
 const Keyword = require('./models/keyword.model')
 
@@ -17,7 +18,13 @@ const createTicket = async (req, res) => {
     if (!messageId) {
       throw new Error('no messageId')
     }
-    const msg = Message.findOne({ _id: messageId }).exec()
+    const msg = await Message.findOne({ _id: messageId }).exec()
+    if (!msg) {
+      throw new Error('no Message')
+    }
+    const ticket = new Ticket({
+      
+    })
   } catch (e) {
     res.status(404).json({
       error: true,
@@ -30,14 +37,30 @@ const editTicket = async (req, res) => {
   const { ticketId } = req.params
 }
 
+const formattedMessage = (msg) => {
+  const formatteddata = {
+    _id: msg.id_str,
+    description: msg.text,
+    url: `https://twitter.com/${msg.user.screen_name}/status/${msg.id_str}`,
+    profile_url: msg.user.profile_image_url_https,
+    created_time: new Date(msg.created_at).toISOString(),
+    updated_time: new Date().toISOString(),
+    ticket_id: ''
+  }
+  return formatteddata
+}
+
 const setStreaming = (
   keywords = ['#hackafuture', '#สวัสดีครับ', 'พรรคอนาคตใหม่']
 ) => {
   stream = T.stream('statuses/filter', {
     track: keywords
   })
-  stream.on('tweet', tweet => {
-    console.log(new Date(), tweet.user.screen_name, ':', tweet.text)
+  stream.on('tweet',async (tweet) => {
+    //console.log(new Date(), tweet.user.screen_name, ':', tweet.text)
+    console.log(JSON.stringify(tweet,null,2))
+    const data = formattedMessage(tweet)
+    console.log(data)
   })
 }
 const getKeyword = async (req, res) => {
