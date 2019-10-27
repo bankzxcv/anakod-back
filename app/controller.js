@@ -9,9 +9,27 @@ const Incr = require('./models/increment.model')
 let T
 let stream
 
-const postTweet = () => {}
+const postTweet = (req, res) => {
+  // const { userId, twitter_id, message } = req.body
+}
 
-const getTicket = async (req, res) => {}
+const getTicket = async (req, res) => {
+  const { limit = '100' } = req.query
+  try {
+    const tickets = await Ticket.find()
+      .sort({ created_time: 1 })
+      .limit(+limit)
+    res.json({
+      error: false,
+      data: tickets
+    })
+  } catch (e) {
+    res.status(404).json({
+      error: true,
+      message: e.message
+    })
+  }
+}
 
 const createTicket = async (req, res) => {
   const { messageId, tags = [], area_tag = '' } = req.body
@@ -55,7 +73,23 @@ const createTicket = async (req, res) => {
 }
 
 const editTicket = async (req, res) => {
-  const { ticketId } = req.params
+  const { ticketId, tags, status } = req.params
+  try {
+    const updatedValue = {
+      ...(typeof status === 'string' && { status }),
+      ...(typeof tags === 'object' && { tags })
+    }
+    const ticket = Ticket.findOneAndUpdate(
+      { ticket },
+      { $set: updatedValue },
+      { new: true }
+    ).exec()
+  } catch (e) {
+    res.status(404).json({
+      error: false,
+      data: e.message
+    })
+  }
 }
 
 const formattedMessage = msg => {
@@ -77,17 +111,23 @@ const setStreaming = (
   stream = T.stream('statuses/filter', {
     track: keywords
   })
+  console.log(`set streaming with keywords: ${keywords}`)
   stream.on('tweet', async tweet => {
-    const data = formattedMessage(tweet)
-    console.log(data)
-    if (data.description.startsWith('RT ')) {
-      return
+    try {
+      const data = formattedMessage(tweet)
+      console.log(data)
+      if (data.description.startsWith('RT ')) {
+        return
+      }
+      const message = new Message(data)
+      const result = await message.save()
+      console.log(result)
+    } catch (e) {
+      console.log(e)
     }
-    const message = new Message(data)
-    const result = await message.save()
-    console.log(result)
   })
 }
+
 const getKeyword = async (req, res) => {
   try {
     const keyword = await Keyword.find().exec()

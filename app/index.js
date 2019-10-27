@@ -41,6 +41,7 @@ app.get('/report/toptags', () => {})
 
 const initStreaming = async () => {
   await controller.startStreaming()
+  console.log('start Streaming already')
 }
 
 initStreaming()
