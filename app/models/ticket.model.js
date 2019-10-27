@@ -7,10 +7,10 @@ const TicketSchema = new mongoose.Schema(
     status: {
       type: String
     },
-    message: String,
+    message_id: String,
     url: String,
     tags: [String],
-    area_tags: String,
+    area_tag: String,
     created_time: String,
     updated_time: String
   },
@@ -20,4 +20,4 @@ const TicketSchema = new mongoose.Schema(
   }
 )
 
-module.exports = mongoose.model('ticket', MessageSchema)
+module.exports = mongoose.model('ticket', TicketSchema)

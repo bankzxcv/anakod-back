@@ -21,15 +21,19 @@ app.get('/', (req, res) => {
   res.json({ hello: true })
 })
 
+app.get('/keyword', controller.getKeyword)
 // API Add Keyword
-app.post('/keyword', (req, res) => {
-  console.log('keyword')
-})
+/*
+body = ['อนาคตใหม่', 'สวัสดีจ้า']
+*/
+app.post('/keyword', controller.editKeyword)
 
-app.put('/keyword', (req, res) => {
-  console.log('edit keyword')
-})
+app.get('/ticket',controller.getTicket)
+app.post('/ticket', controller.createTicket)
+app.put('/ticket/:ticketId', controller.editTicket)
 
+app.get('/report/toparea', () => {})
+app.get('/report/toptags', () => {})
 // API aggegration
 // 1. Sort top 3 areas
 // 2. Sort top 3 tags
