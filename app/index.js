@@ -25,6 +25,8 @@ app.get('/', (req, res) => {
   res.json({ hello: true })
 })
 
+app.post('/tweet', controller.postTweet)
+
 app.get('/keyword', controller.getKeyword)
 // API Add Keyword
 /*

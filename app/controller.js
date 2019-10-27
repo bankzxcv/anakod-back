@@ -5,12 +5,46 @@ const Ticket = require('./models/ticket.model')
 const Message = require('./models/message.model')
 const Keyword = require('./models/keyword.model')
 const Incr = require('./models/increment.model')
+const User = require('./models/user.model')
 
 let T
 let stream
 
-const postTweet = (req, res) => {
-  const { userId, twitter_id, message } = req.body
+const reply = (Twiter, { message_id, text }) => {
+  return new Promise((resolve, reject) => {
+    const build = {
+      status: text,
+      in_reply_to_status_id: message_id
+    }
+    console.log(build)
+    Twiter.post('statuses/update', build, function (err, data, response) {
+      if (err) {
+        return reject(err)
+      }
+      resolve(data)
+    })
+  })
+}
+
+const postTweet = async (req, res) => {
+  try {
+    const { user_id, message_id, text } = req.body
+    const user = await User.findOne({ _id: user_id }).exec()
+    const token = await Token.findOne({}).exec()
+    const Twiter = new Twit({
+      consumer_key: token.consumer_key,
+      consumer_secret: token.consumer_secret,
+      access_token: user.services.twitter.accessToken,
+      access_token_secret: user.services.twitter.accessTokenSecret
+    })
+    const data = await reply(Twiter, { message_id, text })
+    res.json({ error: false, data })
+  } catch (e) {
+    res.status(404).json({
+      error: true,
+      message: e.message
+    })
+  }
 }
 
 const getTicket = async (req, res) => {
@@ -32,12 +66,12 @@ const getTicket = async (req, res) => {
 }
 
 const createTicket = async (req, res) => {
-  const { messageId, tags = [], area_tag = '' } = req.body
+  const { message_id, tags = [], area_tag = '' } = req.body
   try {
-    if (!messageId) {
+    if (!message_id) {
       throw new Error('no messageId')
     }
-    const msg = await Message.findOne({ _id: messageId }).exec()
+    const msg = await Message.findOne({ _id: message_id }).exec()
     if (!msg) {
       throw new Error('no Message')
     }
@@ -53,7 +87,7 @@ const createTicket = async (req, res) => {
       }
     )
     const ticket = new Ticket({
-      _id: `${incr}`,
+      _id: `${incr.incr}`,
       description: `${msg.description}`,
       status: 'doing',
       message_id: msg._id,
@@ -83,11 +117,15 @@ const editTicket = async (req, res) => {
       ...(typeof status === 'string' && { status }),
       ...(typeof tags === 'object' && { tags })
     }
-    const ticket = Ticket.findOneAndUpdate(
-      { ticket },
+    const ticket = await Ticket.findOneAndUpdate(
+      { ticket: ticketId },
       { $set: updatedValue },
       { new: true }
     ).exec()
+    res.json({
+      error: false,
+      data: ticket.toObject()
+    })
   } catch (e) {
     res.status(404).json({
       error: false,
@@ -97,8 +135,12 @@ const editTicket = async (req, res) => {
 }
 
 const formattedMessage = msg => {
+  console.log('--------------')
+  console.log(msg)
+  console.log('--------------')
   const formatteddata = {
-    _id: msg.id_str,
+    _id: `${msg.id_str}`,
+    _id_int: `${msg.id}`,
     description: msg.text,
     url: `https://twitter.com/${msg.user.screen_name}/status/${msg.id_str}`,
     profile_url: msg.user.profile_image_url_https,
@@ -109,9 +151,7 @@ const formattedMessage = msg => {
   return formatteddata
 }
 
-const setStreaming = (
-  keywords = ['#hackafuture', '#ร้องทุกข์', 'พรรคอนาคตใหม่']
-) => {
+const setStreaming = (keywords = ['#hackafuture']) => {
   stream = T.stream('statuses/filter', {
     track: keywords
   })
@@ -119,8 +159,8 @@ const setStreaming = (
   stream.on('tweet', async tweet => {
     try {
       const data = formattedMessage(tweet)
-      console.log(data)
-      if (data.description.startsWith('RT ')) {
+      if (data.description.startsWith('RT')) {
+        console.log(`it's tweeter`)
         return
       }
       const message = new Message(data)
