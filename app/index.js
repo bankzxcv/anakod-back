@@ -4,7 +4,7 @@ const mongoose = require('mongoose')
 const controller = require('./controller')
 
 mongoose.connect(
-  'mongodb://mongo:27017/anakod',
+  'mongodb://165.22.103.247:30001/anakod',
   { useNewUrlParser: true }
 )
 

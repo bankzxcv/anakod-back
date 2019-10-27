@@ -16,8 +16,8 @@ const TicketSchema = new mongoose.Schema(
   },
   {
     strict: false,
-    collection: 'ticket'
+    collection: 'Ticket'
   }
 )
 
-module.exports = mongoose.model('ticket', TicketSchema)
+module.exports = mongoose.model('Ticket', TicketSchema)

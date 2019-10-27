@@ -4,6 +4,7 @@ const Token = require('./models/token.model')
 const Ticket = require('./models/ticket.model')
 const Message = require('./models/message.model')
 const Keyword = require('./models/keyword.model')
+const Incr = require('./models/increment.model')
 
 let T
 let stream
@@ -13,7 +14,7 @@ const postTweet = () => {}
 const getTicket = async (req, res) => {}
 
 const createTicket = async (req, res) => {
-  const { messageId } = req.body
+  const { messageId, tags = [], area_tag = '' } = req.body
   try {
     if (!messageId) {
       throw new Error('no messageId')
@@ -22,9 +23,29 @@ const createTicket = async (req, res) => {
     if (!msg) {
       throw new Error('no Message')
     }
+    const incr = Incr.findOneAndUpdate(
+      {},
+      {
+        $inc: {
+          incr: 1
+        }
+      },
+      {
+        new: true
+      }
+    )
     const ticket = new Ticket({
-      
+      _id: `${msg.incr}`,
+      description: `${msg.description}`,
+      status: 'doing',
+      message_id: msg._id,
+      url: msg.url,
+      tags,
+      area_tag,
+      created_time: new Date().toISOString(),
+      updated_time: new Date().toISOString()
     })
+    await ticket.save()
   } catch (e) {
     res.status(404).json({
       error: true,
@@ -37,7 +58,7 @@ const editTicket = async (req, res) => {
   const { ticketId } = req.params
 }
 
-const formattedMessage = (msg) => {
+const formattedMessage = msg => {
   const formatteddata = {
     _id: msg.id_str,
     description: msg.text,
@@ -51,16 +72,20 @@ const formattedMessage = (msg) => {
 }
 
 const setStreaming = (
-  keywords = ['#hackafuture', '#สวัสดีครับ', 'พรรคอนาคตใหม่']
+  keywords = ['#hackafuture', '#ร้องทุกข์', 'พรรคอนาคตใหม่']
 ) => {
   stream = T.stream('statuses/filter', {
     track: keywords
   })
-  stream.on('tweet',async (tweet) => {
-    //console.log(new Date(), tweet.user.screen_name, ':', tweet.text)
-    console.log(JSON.stringify(tweet,null,2))
+  stream.on('tweet', async tweet => {
     const data = formattedMessage(tweet)
     console.log(data)
+    if (data.description.startsWith('RT ')) {
+      return
+    }
+    const message = new Message(data)
+    const result = await message.save()
+    console.log(result)
   })
 }
 const getKeyword = async (req, res) => {
@@ -113,6 +138,7 @@ const editKeyword = async (req, res) => {
 }
 
 const startStreaming = async () => {
+  console.log('start streaming')
   const item = (await Token.findOne({}).exec()).toObject()
   const valueToken = _.pick(item, [
     'consumer_key',
