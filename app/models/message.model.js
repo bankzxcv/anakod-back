@@ -6,6 +6,7 @@ const MessageSchema = new mongoose.Schema(
       type: String,
       required: true
     },
+    screen_name: String,
     description: String,
     url: String,
     profile_url: String,

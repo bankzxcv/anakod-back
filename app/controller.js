@@ -10,10 +10,10 @@ const User = require('./models/user.model')
 let T
 let stream
 
-const reply = (Twiter, { message_id, text }) => {
+const reply = (Twiter, { message_id, text, screen_name }) => {
   return new Promise((resolve, reject) => {
     const build = {
-      status: text,
+      status: `@${screen_name} ${text}`,
       in_reply_to_status_id: message_id
     }
     console.log(build)
@@ -30,6 +30,8 @@ const postTweet = async (req, res) => {
   try {
     const { user_id, message_id, text } = req.body
     const user = await User.findOne({ _id: user_id }).exec()
+    const msg = await Message.findOne({ _id: message_id }).exec()
+    const screen_name = msg.screen_name
     const token = await Token.findOne({}).exec()
     const Twiter = new Twit({
       consumer_key: token.consumer_key,
@@ -37,7 +39,7 @@ const postTweet = async (req, res) => {
       access_token: user.services.twitter.accessToken,
       access_token_secret: user.services.twitter.accessTokenSecret
     })
-    const data = await reply(Twiter, { message_id, text })
+    const data = await reply(Twiter, { message_id, text, screen_name })
     res.json({ error: false, data })
   } catch (e) {
     res.status(404).json({
@@ -137,15 +139,13 @@ const editTicket = async (req, res) => {
 }
 
 const formattedMessage = msg => {
-  console.log('--------------')
-  console.log(msg)
-  console.log('--------------')
   const formatteddata = {
     _id: `${msg.id_str}`,
     _id_int: `${msg.id}`,
     description: msg.text,
     url: `https://twitter.com/${msg.user.screen_name}/status/${msg.id_str}`,
     profile_url: msg.user.profile_image_url_https,
+    screen_name: msg.user.screen_name,
     created_time: new Date(msg.created_at).toISOString(),
     updated_time: new Date().toISOString(),
     ticket_id: ''
