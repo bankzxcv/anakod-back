@@ -1,0 +1,19 @@
+version: "3"
+services:
+  api:
+    image: node:10.16.3
+    working_dir: /app
+    volumes:
+      - ./app/:/app/
+      - /app/node_modules
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+    restart: always
+    command: ["bash","-c","npm install && npm run dev"]
+  mongo:
+    image: mongo
+    ports:
+      - "30001:27017"
+    restart: always
