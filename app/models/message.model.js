@@ -8,8 +8,8 @@ const MessageSchema = new mongoose.Schema(
     },
     description: String,
     url: String,
-    created_time: Date,
-    updated_time: Date,
+    created_time: String,
+    updated_time: String,
     ticket_id: String
   },
   {

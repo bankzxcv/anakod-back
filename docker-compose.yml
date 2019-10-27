@@ -1,4 +1,8 @@
 version: "3"
+volumes:
+  mongodb-dev:
+    external: true
+
 services:
   api:
     image: node:10.16.3
@@ -14,6 +18,8 @@ services:
     command: ["bash","-c","npm install && npm run dev"]
   mongo:
     image: mongo
+    volumes:
+      - mongodb-dev:/data/db
     ports:
       - "30001:27017"
     restart: always

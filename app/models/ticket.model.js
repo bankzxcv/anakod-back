@@ -11,8 +11,8 @@ const TicketSchema = new mongoose.Schema(
     url: String,
     tags: [String],
     area_tags: String,
-    created_time: Date,
-    updated_time: Date
+    created_time: String,
+    updated_time: String
   },
   {
     strict: false,
